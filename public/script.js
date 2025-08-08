@@ -2,7 +2,9 @@ const messagesDiv = document.getElementById('messages');
 const inputMessage = document.getElementById('inputMessage');
 const sendBtn = document.getElementById('sendBtn');
 
-// Mostrar mensaje del usuario
+let initialMessageShown = false; // Para evitar duplicados
+let awaitingOrderNumber = false; // Controlar lógica
+
 function addUserMessage(message) {
   const div = document.createElement('div');
   div.className = 'bubble message-user';
@@ -11,7 +13,6 @@ function addUserMessage(message) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// Mostrar respuesta del bot
 function addBotMessage(message) {
   const div = document.createElement('div');
   div.className = 'bubble message-bot';
@@ -20,8 +21,11 @@ function addBotMessage(message) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// Mostrar opciones Sí / No al inicio
 function showInitialOptions() {
+  if (initialMessageShown) return; // Ya se mostró
+
+  addBotMessage('👋 Hola, bienvenido al servicio de atención de Frankie’s Labs.');
+
   const wrapper = document.createElement('div');
   wrapper.className = 'bubble message-bot';
 
@@ -43,24 +47,28 @@ function showInitialOptions() {
 
   buttons.appendChild(btnYes);
   buttons.appendChild(btnNo);
-
   wrapper.appendChild(text);
   wrapper.appendChild(buttons);
   messagesDiv.appendChild(wrapper);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  initialMessageShown = true;
 }
 
-// Lógica de respuesta a botones
 function handleQuickReply(reply) {
   addUserMessage(reply);
+
+  const buttonGroups = document.querySelectorAll('.button-group');
+  buttonGroups.forEach(group => group.remove()); // Eliminar botones después de click
+
   if (reply === 'Sí') {
     addBotMessage('Perfecto. ¿Puedes indicarme tu número de pedido?');
-  } else if (reply === 'No') {
+    awaitingOrderNumber = true;
+  } else {
     addBotMessage('Gracias. ¿Puedes explicarnos tu consulta con más detalle?');
   }
 }
 
-// Lógica de campo libre
 sendBtn.addEventListener('click', () => {
   const message = inputMessage.value.trim();
   if (message !== '') {
@@ -77,15 +85,13 @@ inputMessage.addEventListener('keypress', (e) => {
 });
 
 function botResponse(userMessage) {
-  // Puedes conectar esto a la API real si lo deseas
-  const response = `Gracias por tu mensaje. En breve te responderemos.`;
-  setTimeout(() => {
-    addBotMessage(response);
-  }, 1000);
+  if (awaitingOrderNumber) {
+    addBotMessage(`Gracias. Hemos recibido tu número de pedido: ${userMessage}. Pronto te atenderemos.`);
+    awaitingOrderNumber = false;
+  } else {
+    addBotMessage('Gracias por tu mensaje. En breve te responderemos.');
+  }
 }
 
 // Lanzar saludo + opciones al cargar
-window.onload = () => {
-  addBotMessage('👋 Hola, bienvenido al servicio de atención de Frankie’s Labs.');
-  showInitialOptions();
-};
+window.onload = showInitialOptions;
