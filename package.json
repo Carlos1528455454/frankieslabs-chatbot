@@ -1,0 +1,15 @@
+{
+  "name": "frankieslabs-chatbot",
+  "version": "1.0.0",
+  "description": "Chatbot con API de ChatGPT para Frankie's Labs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "dotenv": "^17.2.1",
+    "node-fetch": "^2.6.9"
+  }
+}
