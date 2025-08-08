@@ -33,7 +33,6 @@ app.post('/chat', async (req, res) => {
 
     const reply = data.choices[0].message.content;
     res.json({ reply });
-
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Error en el servidor" });
