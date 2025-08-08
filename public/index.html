@@ -5,28 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Frankie's Labs Chatbot</title>
   <style>
-    #chat {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    body {
       font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
     }
+
+    #chat {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    #messages {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .bubble {
+      padding: 10px 15px;
+      border-radius: 15px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
     .message-user {
-      color: blue;
-      margin: 5px 0;
+      background-color: #e0f7fa;
+      align-self: flex-end;
+      margin-left: auto;
     }
+
     .message-bot {
-      color: green;
-      margin: 5px 0;
+      background-color: #f1f1f1;
+      align-self: flex-start;
+      margin-right: auto;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .chat-btn {
+      flex: 1;
+      margin: 0 5px;
+      padding: 8px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #inputMessage {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+
+    #sendBtn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="chat">
-    <h2>Chat con Frankie's Bot</h2>
-    <div id="messages"></div>
+    <h3>💬 Atención al Cliente</h3>
+    <div id="messages">
+      <div class="bubble message-bot">👋 Hola: Bienvenid@ al servicio de atención al cliente de Frankie's Labs ✨.</div>
+      <div class="bubble message-bot">¿Tu consulta está relacionada con un pedido ya realizado?</div>
+      <div class="button-group">
+        <button class="chat-btn" onclick="handleQuickReply('Sí')">Sí.</button>
+        <button class="chat-btn" onclick="handleQuickReply('No')">No.</button>
+      </div>
+    </div>
     <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." />
     <button id="sendBtn">Enviar</button>
   </div>
