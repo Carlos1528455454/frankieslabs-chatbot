@@ -17,7 +17,7 @@
       width: 100%;
       margin: 20px auto;
       padding: 15px;
-      border: none;               /* Sin borde para evitar doble cuadro */
+      border: none;
       border-radius: 12px;
       background-color: white;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -33,7 +33,7 @@
       margin-bottom: 10px;
       display: flex;
       flex-direction: column;
-      padding-right: 10px; /* para evitar que scrollbar tape texto */
+      padding-right: 10px;
     }
 
     .bubble {
@@ -114,9 +114,10 @@
     <div id="messages" aria-live="polite" aria-atomic="false"></div>
 
     <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." aria-label="Escribe tu mensaje" />
-    <button id="sendBtn" disabled>Enviar</button>
+    <button id="sendBtn">Enviar</button>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
+
