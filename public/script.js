@@ -2,8 +2,8 @@ const messagesDiv = document.getElementById('messages');
 const inputMessage = document.getElementById('inputMessage');
 const sendBtn = document.getElementById('sendBtn');
 
-let initialMessageShown = false; // Para evitar duplicados
-let awaitingOrderNumber = false; // Controlar lógica
+let initialMessageShown = false; 
+let awaitingOrderNumber = false; 
 
 function addUserMessage(message) {
   const div = document.createElement('div');
@@ -22,7 +22,7 @@ function addBotMessage(message) {
 }
 
 function showInitialOptions() {
-  if (initialMessageShown) return; // Ya se mostró
+  if (initialMessageShown) return;
 
   addBotMessage('👋 Hola, bienvenido al servicio de atención de Frankie’s Labs.');
 
@@ -59,7 +59,7 @@ function handleQuickReply(reply) {
   addUserMessage(reply);
 
   const buttonGroups = document.querySelectorAll('.button-group');
-  buttonGroups.forEach(group => group.remove()); // Eliminar botones después de click
+  buttonGroups.forEach(group => group.remove());
 
   if (reply === 'Sí') {
     addBotMessage('Perfecto. ¿Puedes indicarme tu número de pedido?');
@@ -75,13 +75,19 @@ sendBtn.addEventListener('click', () => {
     addUserMessage(message);
     inputMessage.value = '';
     botResponse(message);
+    sendBtn.disabled = true; // Se desactiva después de enviar
   }
 });
 
 inputMessage.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !sendBtn.disabled) {
     sendBtn.click();
   }
+});
+
+// Cambiar estado del botón según si hay texto
+inputMessage.addEventListener('input', () => {
+  sendBtn.disabled = inputMessage.value.trim() === '';
 });
 
 function botResponse(userMessage) {
@@ -93,5 +99,8 @@ function botResponse(userMessage) {
   }
 }
 
-// Lanzar saludo + opciones al cargar
-window.onload = showInitialOptions;
+// Al cargar, mostrar saludo y dejar botón deshabilitado
+window.onload = () => {
+  showInitialOptions();
+  sendBtn.disabled = true;
+};
