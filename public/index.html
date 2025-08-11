@@ -14,18 +14,26 @@
 
     #chat {
       max-width: 400px;
+      width: 100%;
       margin: 20px auto;
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 12px;
       background-color: white;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
     }
 
     #messages {
-      max-height: 300px;
+      flex-grow: 1;
       overflow-y: auto;
       margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      padding-right: 10px; /* para evitar que scrollbar tape texto */
     }
 
     .bubble {
@@ -71,6 +79,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       margin-top: 10px;
+      box-sizing: border-box;
     }
 
     #sendBtn {
@@ -83,15 +92,29 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
+    #sendBtn:disabled {
+      background-color: #9e9e9e;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 480px) {
+      #chat {
+        max-width: 95vw;
+        height: 100vh;
+        margin: 10px auto;
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="chat">
+  <div id="chat" role="main" aria-label="Chat de atención al cliente">
     <h3>💬 Atención al Cliente</h3>
-    <div id="messages"></div>
+    <div id="messages" aria-live="polite" aria-atomic="false"></div>
 
-    <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." />
-    <button id="sendBtn">Enviar</button>
+    <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." aria-label="Escribe tu mensaje" />
+    <button id="sendBtn" disabled>Enviar</button>
   </div>
 
   <script src="script.js"></script>
