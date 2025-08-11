@@ -16,7 +16,6 @@
       max-width: 400px;
       width: 100%;
       margin: 20px auto;
-      padding: 15px;
       border: none;
       border-radius: 12px;
       background-color: white;
@@ -25,31 +24,55 @@
       flex-direction: column;
       height: 100vh;
       box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    /* Header del chat */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      background: #FAEBDD; /* << Cambia aquí el color del header si quieres otro */
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+      z-index: 2;
+    }
+    .chat-header img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .chat-header .title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #222;
+      line-height: 1.2;
     }
 
     #messages {
       flex-grow: 1;
       overflow-y: auto;
-      margin-bottom: 10px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      padding-right: 10px;
+      gap: 10px;
     }
 
     .bubble {
       padding: 10px 15px;
       border-radius: 15px;
-      margin-bottom: 10px;
       max-width: 80%;
       word-wrap: break-word;
     }
-
     .message-user {
       background-color: #e0f7fa;
       align-self: flex-end;
       margin-left: auto;
     }
-
     .message-bot {
       background-color: #f1f1f1;
       align-self: flex-start;
@@ -59,12 +82,11 @@
     .button-group {
       display: flex;
       justify-content: space-between;
-      margin-top: 10px;
+      gap: 10px;
+      margin-top: 6px;
     }
-
     .chat-btn {
       flex: 1;
-      margin: 0 5px;
       padding: 8px;
       background-color: #4CAF50;
       color: white;
@@ -73,32 +95,43 @@
       cursor: pointer;
     }
 
+    /* Área de entrada */
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px 14px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      background: #fff;
+    }
     #inputMessage {
       width: 100%;
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      margin-top: 10px;
       box-sizing: border-box;
     }
 
-    /* Botón activo */
-    #sendBtn:enabled {
-      background-color: #4CAF50;
+    /* Botón activo/desactivo con transición */
+    #sendBtn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
-
-    /* Botón activo con efecto al habilitarse */
+    #sendBtn:enabled {
+      background-color: #4CAF50;
+    }
     #sendBtn:enabled:hover {
       background-color: #45a049;
       box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
     }
-
-    /* Botón deshabilitado */
     #sendBtn:disabled {
       background-color: #9e9e9e;
       cursor: not-allowed;
-      transition: background-color 0.3s ease;
     }
 
     @media (max-width: 480px) {
@@ -106,18 +139,28 @@
         max-width: 95vw;
         height: 100vh;
         margin: 10px auto;
-        padding: 10px;
       }
+      .chat-header .title { font-size: 15px; }
+      .chat-header img { width: 26px; height: 26px; }
     }
   </style>
 </head>
 <body>
   <div id="chat" role="main" aria-label="Chat de atención al cliente">
-    <h3>💬 Atención al Cliente</h3>
+    <!-- Header con logo y título -->
+    <div class="chat-header">
+      <img src="https://www.frankieslabs.com/cdn/shop/files/logo-black.png" alt="Logo Frankie's Labs" />
+      <div class="title">Bienvenido al chat de Frankie's Labs</div>
+    </div>
+
+    <!-- Mensajes -->
     <div id="messages" aria-live="polite" aria-atomic="false"></div>
 
-    <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." aria-label="Escribe tu mensaje" />
-    <button id="sendBtn" disabled>Enviar</button>
+    <!-- Área de entrada -->
+    <div class="input-area">
+      <input type="text" id="inputMessage" placeholder="Escribe tu mensaje aquí..." aria-label="Escribe tu mensaje" />
+      <button id="sendBtn" disabled>Enviar</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
