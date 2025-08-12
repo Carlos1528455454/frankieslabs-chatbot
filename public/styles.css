@@ -1,4 +1,5 @@
 /* ===== Base ===== */
+html, body { height: 100%; }              /* clave para que el #chat use el alto del iframe */
 body {
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
@@ -10,6 +11,8 @@ body {
 #chat {
   max-width: 400px;
   width: 100%;
+  height: 100%;                           /* antes: 100vh → causaba desbordes en iframe */
+  max-height: 100%;
   margin: 0 auto;
   border: none;
   border-radius: 12px;
@@ -17,38 +20,38 @@ body {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  height: 100vh;
   box-sizing: border-box;
-  overflow: hidden; /* evita scroll doble con header */
+  overflow: hidden;
 }
 
 /* ===== Header del chat (logo grande + título centrado) ===== */
 .chat-header {
   display: grid;
-  grid-template-columns: auto 1fr auto; /* logo | título | “espaciador” */
+  grid-template-columns: auto 1fr auto;   /* logo | título | espaciador/X */
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  min-height: 72px;                 /* ↑ sube este valor para agrandar el logo */
+  height: 72px;                           /* fijo para que el logo no “rompa” la altura */
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
-  background: #FAEBDD;              /* Color corporativo */
+  background: #FAEBDD;                    /* color corporativo */
   box-shadow: 0 1px 0 rgba(0,0,0,0.06);
   z-index: 2;
 }
 
-/* Logo: ocupa todo el alto del header */
+/* Logo: ocupa el alto del header sin deformarse ni desbordar */
 .chat-header img {
   height: 100%;
   width: auto;
-  max-height: none;                  /* sin límite */
   object-fit: contain;
+  display: block;
   flex-shrink: 0;
   border-radius: 6px;
-  display: block;
+  /* Si tu PNG tiene mucho “aire” blanco, puedes recortar un poco:
+     clip-path: inset(4% 4% 4% 4%); */
 }
 
-/* Título centrado de verdad */
+/* Título centrado real */
 .chat-header .title {
   text-align: center;
   font-size: 17px;
@@ -57,16 +60,17 @@ body {
   line-height: 1.2;
 }
 
-/* Espaciador para equilibrar el layout y mantener centrado óptico */
+/* Espaciador para equilibrar con la X externa */
 .chat-header::after {
   content: '';
-  width: 48px;                       /* ajusta si hace falta (30–56px) */
+  width: 48px;                            /* ajusta si el centrado no se ve perfecto */
   height: 1px;
 }
 
 /* ===== Zona de mensajes ===== */
 #messages {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;                          /* evita que crezca más que el contenedor */
   overflow-y: auto;
   padding: 12px 14px;
   display: flex;
@@ -129,9 +133,7 @@ body {
   outline: none;
 }
 
-#inputMessage:focus {
-  border-color: #4CAF50;
-}
+#inputMessage:focus { border-color: #4CAF50; }
 
 /* Botón Enviar (activo/inactivo) */
 #sendBtn {
@@ -143,29 +145,20 @@ body {
   cursor: pointer;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
-
-#sendBtn:enabled {
-  background-color: #4CAF50;
-}
-
+#sendBtn:enabled { background-color: #4CAF50; }
 #sendBtn:enabled:hover {
   background-color: #45a049;
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
-
-#sendBtn:disabled {
-  background-color: #9e9e9e;
-  cursor: not-allowed;
-}
+#sendBtn:disabled { background-color: #9e9e9e; cursor: not-allowed; }
 
 /* ===== Responsive ===== */
 @media (max-width: 480px) {
   #chat {
     max-width: 95vw;
-    height: 100vh;
+    height: 100%;                         /* mantener 100% (no 100vh) dentro del iframe */
     margin: 0 auto;
   }
-  .chat-header { min-height: 64px; }
+  .chat-header { height: 64px; }
   .chat-header .title { font-size: 16px; }
-  /* No limitar el alto del logo en móvil */
 }
