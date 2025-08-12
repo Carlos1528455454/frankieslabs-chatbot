@@ -40,12 +40,14 @@
       z-index: 2;
     }
     .chat-header img {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
+    height: 100%;        /* ocupa todo el alto del header */
+    width: auto;         /* mantiene la proporción */
+    max-height: 50px;    /* ajusta el valor según el alto de tu header */
+    border-radius: 6px;
+    object-fit: contain;
+    flex-shrink: 0;
+      }
+
     .chat-header .title {
       font-size: 16px;
       font-weight: 700;
