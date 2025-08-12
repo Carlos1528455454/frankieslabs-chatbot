@@ -22,33 +22,46 @@ body {
   overflow: hidden; /* evita scroll doble con header */
 }
 
-/* ===== Header del chat ===== */
+/* ===== Header del chat (logo grande + título centrado) ===== */
 .chat-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* logo | título | “espaciador” */
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 10px 14px;
+  min-height: 72px;                 /* ↑ sube este valor para agrandar el logo */
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
-  background: #FAEBDD; /* Color corporativo */
+  background: #FAEBDD;              /* Color corporativo */
   box-shadow: 0 1px 0 rgba(0,0,0,0.06);
   z-index: 2;
 }
 
+/* Logo: ocupa todo el alto del header */
 .chat-header img {
   height: 100%;
   width: auto;
-  max-height: 120px; /* Ajusta el alto del logo aquí */
+  max-height: none;                  /* sin límite */
   object-fit: contain;
   flex-shrink: 0;
   border-radius: 6px;
+  display: block;
 }
 
+/* Título centrado de verdad */
 .chat-header .title {
-  font-size: 16px;
+  text-align: center;
+  font-size: 17px;
   font-weight: 700;
   color: #222;
   line-height: 1.2;
+}
+
+/* Espaciador para equilibrar el layout y mantener centrado óptico */
+.chat-header::after {
+  content: '';
+  width: 48px;                       /* ajusta si hace falta (30–56px) */
+  height: 1px;
 }
 
 /* ===== Zona de mensajes ===== */
@@ -152,6 +165,7 @@ body {
     height: 100vh;
     margin: 0 auto;
   }
-  .chat-header .title { font-size: 15px; }
-  .chat-header img { max-height: 44px; }
+  .chat-header { min-height: 64px; }
+  .chat-header .title { font-size: 16px; }
+  /* No limitar el alto del logo en móvil */
 }
