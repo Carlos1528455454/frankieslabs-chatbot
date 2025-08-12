@@ -4,154 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Frankie's Labs Chatbot</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-    }
-
-    #chat {
-      max-width: 400px;
-      width: 100%;
-      margin: 20px auto;
-      border: none;
-      border-radius: 12px;
-      background-color: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-
-    /* Header del chat */
-    .chat-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-      background: #FAEBDD; /* << Cambia aquí el color del header si quieres otro */
-      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
-      z-index: 2;
-    }
-    .chat-header img {
-    height: 100%;        /* ocupa todo el alto del header */
-    width: auto;         /* mantiene la proporción */
-    max-height: 50px;    /* ajusta el valor según el alto de tu header */
-    border-radius: 6px;
-    object-fit: contain;
-    flex-shrink: 0;
-      }
-
-    .chat-header .title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #222;
-      line-height: 1.2;
-    }
-
-    #messages {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .bubble {
-      padding: 10px 15px;
-      border-radius: 15px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-    .message-user {
-      background-color: #e0f7fa;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-    .message-bot {
-      background-color: #f1f1f1;
-      align-self: flex-start;
-      margin-right: auto;
-    }
-
-    .button-group {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .chat-btn {
-      flex: 1;
-      padding: 8px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    /* Área de entrada */
-    .input-area {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 14px 14px;
-      border-top: 1px solid rgba(0,0,0,0.06);
-      background: #fff;
-    }
-    #inputMessage {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    /* Botón activo/desactivo con transición */
-    #sendBtn {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    }
-    #sendBtn:enabled {
-      background-color: #4CAF50;
-    }
-    #sendBtn:enabled:hover {
-      background-color: #45a049;
-      box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-    }
-    #sendBtn:disabled {
-      background-color: #9e9e9e;
-      cursor: not-allowed;
-    }
-
-    @media (max-width: 480px) {
-      #chat {
-        max-width: 95vw;
-        height: 100vh;
-        margin: 10px auto;
-      }
-      .chat-header .title { font-size: 15px; }
-      .chat-header img { width: 26px; height: 26px; }
-    }
-  </style>
+  <!-- Enlace al archivo CSS externo -->
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="chat" role="main" aria-label="Chat de atención al cliente">
     <!-- Header con logo y título -->
     <div class="chat-header">
-      <img src="https://cdn.shopify.com/s/files/1/0816/9770/2236/files/Recurso_44_9086c52f-7865-40d6-85a6-365f2dcfa669.png?v=1745483555" />
+      <img src="https://cdn.shopify.com/s/files/1/0816/9770/2236/files/Recurso_44_9086c52f-7865-40d6-85a6-365f2dcfa669.png?v=1745483555" alt="Logo Frankie's Labs" />
       <div class="title">Bienvenido al chat de Frankie's Labs</div>
     </div>
 
@@ -168,3 +28,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
