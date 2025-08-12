@@ -11,8 +11,8 @@ const sendBtn = document.getElementById('sendBtn');
 // ==================
 let initialMessageShown = false;
 let awaitingOrderNumber = false;
-let isOpen = false; // estado visual del chat
-let lastFocusedEl = null; // para devolver foco al cerrar
+let isOpen = false;           // estado visual del chat
+let lastFocusedEl = null;     // para devolver foco al cerrar
 
 // ==================
 // Utilidades de UI (burbujas)
@@ -120,51 +120,8 @@ function botResponse(userMessage) {
 // ==================
 // Animación abrir/cerrar (slide desde abajo)
 // ==================
-
-// Botón flotante para abrir/cerrar (se inyecta sin tocar el HTML)
-const toggleBtn = document.createElement('button');
-toggleBtn.id = 'chatToggle';
-toggleBtn.type = 'button';
-toggleBtn.setAttribute('aria-controls', 'chat');
-toggleBtn.setAttribute('aria-expanded', 'false');
-toggleBtn.setAttribute('aria-label', 'Abrir chat de atención al cliente');
-// Estilos inline mínimos para no depender del CSS externo
-Object.assign(toggleBtn.style, {
-  position: 'fixed',
-  right: '16px',
-  bottom: '16px',
-  width: '56px',
-  height: '56px',
-  borderRadius: '50%',
-  border: 'none',
-  boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-  background: '#4CAF50',
-  color: '#fff',
-  fontSize: '22px',
-  cursor: 'pointer',
-  zIndex: '9999'
-});
-toggleBtn.textContent = '✉️'; // icono de sobre como pediste
-document.body.appendChild(toggleBtn);
-
-// Botón de cierre dentro del header (X)
-const header = document.querySelector('.chat-header');
-const closeBtn = document.createElement('button');
-closeBtn.type = 'button';
-closeBtn.setAttribute('aria-label', 'Cerrar chat');
-Object.assign(closeBtn.style, {
-  marginLeft: 'auto',
-  border: 'none',
-  background: 'transparent',
-  fontSize: '22px',
-  lineHeight: '1',
-  cursor: 'pointer'
-});
-closeBtn.textContent = '×';
-header && header.appendChild(closeBtn);
-
-// Base de transición y estado inicial cerrado
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function applyClosedStateInstant() {
   chatEl.style.transition = prefersReduced ? 'none' : 'transform 320ms ease-in';
   chatEl.style.transform = 'translateY(100%)';
@@ -172,52 +129,48 @@ function applyClosedStateInstant() {
   chatEl.style.visibility = 'hidden';
   chatEl.style.pointerEvents = 'none';
   chatEl.setAttribute('aria-hidden', 'true');
-  toggleBtn.setAttribute('aria-expanded', 'false');
   isOpen = false;
 }
 
 function openChat() {
   if (isOpen) return;
   lastFocusedEl = document.activeElement;
+
   chatEl.style.willChange = 'transform';
   chatEl.style.transition = prefersReduced ? 'none' : 'transform 340ms ease-out';
   chatEl.style.visibility = 'visible';
   chatEl.style.pointerEvents = 'auto';
   chatEl.style.opacity = '1';
+
   requestAnimationFrame(() => {
     chatEl.style.transform = 'translateY(0)';
   });
+
   chatEl.setAttribute('aria-hidden', 'false');
-  toggleBtn.setAttribute('aria-expanded', 'true');
-  toggleBtn.style.display = 'none'; // ocultamos el botón mientras está abierto
   isOpen = true;
 
-  // Al abrir por primera vez, mostramos opciones iniciales
+  // Mensaje inicial (solo 1 vez)
   showInitialOptions();
 
-  // Foco al input para escribir de inmediato
+  // Foco al input
   setTimeout(() => inputMessage && inputMessage.focus(), prefersReduced ? 0 : 350);
 }
 
 function closeChat() {
   if (!isOpen) return;
+
   chatEl.style.transition = prefersReduced ? 'none' : 'transform 300ms ease-in';
   chatEl.style.transform = 'translateY(100%)';
   chatEl.setAttribute('aria-hidden', 'true');
   isOpen = false;
 
-  // Al finalizar la transición, desactivar interacción y mostrar el botón
   const onEnd = () => {
     chatEl.style.visibility = 'hidden';
     chatEl.style.pointerEvents = 'none';
-    toggleBtn.style.display = 'block';
-    toggleBtn.setAttribute('aria-expanded', 'false');
     chatEl.removeEventListener('transitionend', onEnd);
-    // Devolver foco al último elemento que lo tenía
+    // Devolver foco al elemento que abrió
     if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
       lastFocusedEl.focus();
-    } else {
-      toggleBtn.focus();
     }
   };
   prefersReduced ? onEnd() : chatEl.addEventListener('transitionend', onEnd);
@@ -227,12 +180,33 @@ function toggleChat() {
   isOpen ? closeChat() : openChat();
 }
 
-// Eventos del toggle y cierre
-toggleBtn.addEventListener('click', toggleChat);
-closeBtn.addEventListener('click', closeChat);
+// ==================
+// Cerrar con ESC
+// ==================
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && isOpen) {
+  if (e.key === 'Escape' && isOpen) closeChat();
+});
+
+// ==================
+// Triggers desde tu HTML
+// ==================
+// Usa data-chat-open en tu botón para abrir,
+// data-chat-close en tu "X" para cerrar,
+// o data-chat-toggle para alternar.
+document.addEventListener('click', (e) => {
+  const openTrigger = e.target.closest('[data-chat-open]');
+  const closeTrigger = e.target.closest('[data-chat-close]');
+  const toggleTrigger = e.target.closest('[data-chat-toggle]');
+
+  if (openTrigger) {
+    e.preventDefault();
+    openChat();
+  } else if (closeTrigger) {
+    e.preventDefault();
     closeChat();
+  } else if (toggleTrigger) {
+    e.preventDefault();
+    toggleChat();
   }
 });
 
@@ -240,7 +214,7 @@ window.addEventListener('keydown', (e) => {
 // Inicialización
 // ==================
 window.addEventListener('load', () => {
-  // Aseguramos capa base de animación y estado cerrado al iniciar
+  // Estado cerrado al iniciar
   chatEl.style.transform = 'translateY(100%)';
   chatEl.style.opacity = '0';
   chatEl.style.visibility = 'hidden';
@@ -250,10 +224,13 @@ window.addEventListener('load', () => {
   // Botón enviar deshabilitado al inicio
   sendBtn.disabled = true;
 
-  // Estado cerrado inmediato
+  // Aplicar estado cerrado inmediato
   applyClosedStateInstant();
 
-  // Si quieres que el chat se abra automáticamente al cargar, descomenta:
+  // Si quieres abrir automáticamente al cargar, descomenta:
   // openChat();
 });
+
+// Exponer funciones por si las necesitas desde fuera
+window.FrankiesChat = { open: openChat, close: closeChat, toggle: toggleChat };
 
