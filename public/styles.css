@@ -38,7 +38,7 @@ body {
 .chat-header img {
   height: 100%;
   width: auto;
-  max-height: 80px; /* Ajusta el alto del logo aquí */
+  max-height: 120px; /* Ajusta el alto del logo aquí */
   object-fit: contain;
   flex-shrink: 0;
   border-radius: 6px;
