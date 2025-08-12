@@ -168,46 +168,32 @@ function closeChat() {
     chatEl.style.visibility = 'hidden';
     chatEl.style.pointerEvents = 'none';
     chatEl.removeEventListener('transitionend', onEnd);
-    // Devolver foco al elemento que abrió
     if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
       lastFocusedEl.focus();
     }
+    // Avisar al padre (Shopify) para que cierre el panel externo con animación
+    try {
+      window.parent.postMessage({ source: 'FrankiesChat', action: 'close-widget' }, '*');
+    } catch (e) {}
   };
   prefersReduced ? onEnd() : chatEl.addEventListener('transitionend', onEnd);
 }
 
-function toggleChat() {
-  isOpen ? closeChat() : openChat();
-}
+function toggleChat() { isOpen ? closeChat() : openChat(); }
 
-// ==================
 // Cerrar con ESC
-// ==================
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && isOpen) closeChat();
 });
 
-// ==================
-// Triggers desde tu HTML
-// ==================
-// Usa data-chat-open en tu botón para abrir,
-// data-chat-close en tu "X" para cerrar,
-// o data-chat-toggle para alternar.
+// Triggers desde HTML embebido (por si algún día los usas)
 document.addEventListener('click', (e) => {
   const openTrigger = e.target.closest('[data-chat-open]');
   const closeTrigger = e.target.closest('[data-chat-close]');
   const toggleTrigger = e.target.closest('[data-chat-toggle]');
-
-  if (openTrigger) {
-    e.preventDefault();
-    openChat();
-  } else if (closeTrigger) {
-    e.preventDefault();
-    closeChat();
-  } else if (toggleTrigger) {
-    e.preventDefault();
-    toggleChat();
-  }
+  if (openTrigger) { e.preventDefault(); openChat(); }
+  else if (closeTrigger) { e.preventDefault(); closeChat(); }
+  else if (toggleTrigger) { e.preventDefault(); toggleChat(); }
 });
 
 // ==================
@@ -227,10 +213,12 @@ window.addEventListener('load', () => {
   // Aplicar estado cerrado inmediato
   applyClosedStateInstant();
 
-  // Si quieres abrir automáticamente al cargar, descomenta:
-  // openChat();
+  // --- IMPORTANTE ---
+  // Si el chat está embebido en Shopify (iframe), ábrelo automáticamente
+  if (window.top !== window.self) {
+    setTimeout(() => openChat(), 50);
+  }
 });
 
-// Exponer funciones por si las necesitas desde fuera
+// Exponer funciones por si las necesitas desde consola
 window.FrankiesChat = { open: openChat, close: closeChat, toggle: toggleChat };
-
