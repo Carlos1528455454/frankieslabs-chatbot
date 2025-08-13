@@ -33,6 +33,20 @@ function addBotMessage(message) {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
+// Indicador “escribiendo…”
+function addTypingIndicator() {
+  const div = document.createElement('div');
+  div.className = 'bubble message-bot';
+  div.dataset.typing = 'true';
+  div.innerText = 'Escribiendo…';
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return div;
+}
+function removeTypingIndicator(el) {
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
+
 // ==================
 // Mensaje inicial
 // ==================
@@ -92,8 +106,8 @@ sendBtn.addEventListener('click', () => {
   if (message !== '') {
     addUserMessage(message);
     inputMessage.value = '';
+    sendBtn.disabled = true; // se desactiva durante el envío
     botResponse(message);
-    sendBtn.disabled = true; // Se desactiva después de enviar
   }
 });
 
@@ -108,12 +122,57 @@ inputMessage.addEventListener('input', () => {
   sendBtn.disabled = inputMessage.value.trim() === '';
 });
 
-function botResponse(userMessage) {
+// ==================
+// Llamada a backend (Render) y respuesta del bot
+// ==================
+async function botResponse(userMessage) {
+  // Si estábamos pidiendo nº de pedido, lo confirmamos y no llamamos a la API
   if (awaitingOrderNumber) {
     addBotMessage(`Gracias. Hemos recibido tu número de pedido: ${userMessage}. Pronto te atenderemos.`);
     awaitingOrderNumber = false;
-  } else {
-    addBotMessage('Gracias por tu mensaje. En breve te responderemos.');
+    return;
+  }
+
+  // Indicador de “escribiendo…”
+  const typingEl = addTypingIndicator();
+
+  try {
+    // Timeout de seguridad
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000); // 20s
+
+    // IMPORTANTE:
+    // Usamos ruta relativa /chat porque el index y el script se sirven desde el mismo servicio en Render.
+    // Si tuvieras otro dominio, cambia aquí por la URL absoluta y habilita CORS en el backend.
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      // Puede venir 401/403/500, mostramos un mensaje amable
+      removeTypingIndicator(typingEl);
+      addBotMessage('Lo siento, ahora mismo no puedo responder. Inténtalo de nuevo en unos segundos.');
+      return;
+    }
+
+    const data = await res.json();
+    const reply = (data && data.reply) ? String(data.reply) : 'No recibí respuesta del servidor.';
+
+    removeTypingIndicator(typingEl);
+    addBotMessage(reply);
+  } catch (err) {
+    removeTypingIndicator(typingEl);
+    // Abort, red, u otro error de red
+    addBotMessage('Tuvimos un problema de conexión. Por favor, inténtalo otra vez.');
+  } finally {
+    // El botón se reactivará cuando el usuario empiece a escribir (por el listener de input).
+    // Si quieres reactivarlo ya, quita el comentario de la línea siguiente:
+    // sendBtn.disabled = false;
   }
 }
 
@@ -213,7 +272,6 @@ window.addEventListener('load', () => {
   // Aplicar estado cerrado inmediato
   applyClosedStateInstant();
 
-  // --- IMPORTANTE ---
   // Si el chat está embebido en Shopify (iframe), ábrelo automáticamente
   if (window.top !== window.self) {
     setTimeout(() => openChat(), 50);
