@@ -31,12 +31,40 @@ app.get('/health', (_req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Utilidad: construye el System Prompt con los textos efectivos
+// Utilidades
 // ─────────────────────────────────────────────────────────────
 function buildSystemPrompt() {
+  // Reemplaza TODAS las apariciones de los placeholders
   return SYSTEM_PROMPT
-    .replace('{{OUT_OF_SCOPE}}', OUT_OF_SCOPE_MESSAGE)
-    .replace('{{SUPPORT_HANDOFF}}', SUPPORT_HANDOFF_MESSAGE);
+    .replaceAll('{{OUT_OF_SCOPE}}', OUT_OF_SCOPE_MESSAGE)
+    .replaceAll('{{SUPPORT_HANDOFF}}', SUPPORT_HANDOFF_MESSAGE);
+}
+
+/**
+ * Sanitiza el contexto que pueda venir del cliente:
+ * - Acepta solo roles 'user' y 'assistant' (nunca 'system')
+ * - Acepta solo objetos con 'role' y 'content' string
+ * - Limita longitud para evitar abusos accidentales
+ */
+function sanitizeContext(raw) {
+  if (!Array.isArray(raw)) return [];
+  const ALLOWED_ROLES = new Set(['user', 'assistant']);
+  const MAX_ITEMS = 20;
+  const MAX_CHARS = 4000;
+
+  const safe = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    if (!ALLOWED_ROLES.has(item.role)) continue;
+    if (typeof item.content !== 'string') continue;
+
+    const trimmed = item.content.slice(0, MAX_CHARS).trim();
+    if (!trimmed) continue;
+
+    safe.push({ role: item.role, content: trimmed });
+    if (safe.length >= MAX_ITEMS) break;
+  }
+  return safe;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -51,11 +79,11 @@ app.post('/chat', async (req, res) => {
     }
 
     const userMsg = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
-    const context = Array.isArray(req.body?.context) ? req.body.context : [];
-
     if (!userMsg) {
       return res.status(400).json({ error: 'El campo "message" es requerido.' });
     }
+
+    const context = sanitizeContext(req.body?.context);
 
     // Construimos prompt de sistema con reglas de alcance + handoff soporte
     const systemPrompt = buildSystemPrompt();
@@ -63,7 +91,7 @@ app.post('/chat', async (req, res) => {
     // Mensajes para la API
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...context, // historial o pasajes (si usas RAG)
+      ...context, // historial o pasajes (si usas RAG en el Paso 2)
       { role: 'user', content: userMsg }
     ];
 
@@ -77,6 +105,7 @@ app.post('/chat', async (req, res) => {
       body: JSON.stringify({
         model: OPENAI_MODEL,
         temperature: 0.2, // respuestas estables y pegadas al contexto
+        // max_tokens: 500, // opcional: limita coste/respuesta
         messages
       })
     });
