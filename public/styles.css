@@ -40,15 +40,15 @@ body {
 }
 
 /* Logo: ocupa el alto del header sin deformarse ni desbordar */
-.chat-header img {
-  height: 100%;
+/* Logo del chatbot: tamaño máximo controlado */
+#chat .chat-header img {
+  max-width: 56px;        /* ajusta 40–64px a tu gusto */
+  max-height: 56px;
   width: auto;
+  height: auto;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
-  border-radius: 6px;
-  /* Si tu PNG tiene mucho “aire” blanco, puedes recortar un poco:
-     clip-path: inset(4% 4% 4% 4%); */
 }
 
 /* Título centrado real */
