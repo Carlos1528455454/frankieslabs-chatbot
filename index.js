@@ -18,6 +18,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 // Permite cambiar el modelo sin tocar código. Recomendado: gpt-4o-mini por coste/latencia.
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
+// Vars Shopify Storefront
+const SHOPIFY_SHOP_DOMAIN = process.env.SHOPIFY_SHOP_DOMAIN;
+const SHOPIFY_STOREFRONT_ACCESS_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+const SHOPIFY_API_VERSION = process.env.SHOPIFY_API_VERSION || '2024-07';
+
 // ─────────────────────────────────────────────────────────────
 // Middlewares
 // ─────────────────────────────────────────────────────────────
@@ -31,7 +36,176 @@ app.get('/health', (_req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Utilidades
+// Helpers Storefront
+// ─────────────────────────────────────────────────────────────
+async function callStorefront(query, variables = {}) {
+  if (!SHOPIFY_SHOP_DOMAIN || !SHOPIFY_STOREFRONT_ACCESS_TOKEN || !SHOPIFY_API_VERSION) {
+    const missing = {
+      SHOPIFY_SHOP_DOMAIN: !!SHOPIFY_SHOP_DOMAIN,
+      SHOPIFY_STOREFRONT_ACCESS_TOKEN: !!SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+      SHOPIFY_API_VERSION: !!SHOPIFY_API_VERSION
+    };
+    const err = new Error('Faltan variables de entorno de Shopify');
+    err.missing = missing;
+    throw err;
+  }
+
+  const resp = await fetch(`https://${SHOPIFY_SHOP_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_ACCESS_TOKEN
+    },
+    body: JSON.stringify({ query, variables })
+  });
+
+  const json = await resp.json();
+  if (!resp.ok || json.errors) {
+    const err = new Error('Error Storefront');
+    err.status = resp.status;
+    err.details = json.errors || json;
+    throw err;
+  }
+  return json.data;
+}
+
+// Pequeño normalizador para extraer términos de búsqueda del mensaje del usuario
+function makeSearchQuery(text) {
+  if (!text) return null;
+  const stop = new Set([
+    'de','la','el','los','las','para','con','y','o','u','en','del','al','un','una','unos','unas',
+    'que','cuál','cual','cómo','como','qué','por','mi','me','quiero','dime','sobre','es','son',
+    'the','a','an','of','for','and','or','in','to','on','my','is','are','i','you'
+  ]);
+  const terms = text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stop.has(w))
+    .slice(0, 8);
+  return terms.length ? terms.join(' ') : null;
+}
+
+// Búsqueda de productos para enriquecer el chat
+async function searchProductsForQuery(userText, limit = 5) {
+  const q = makeSearchQuery(userText);
+  const first = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20);
+
+  const GQL = `
+    query Products($first:Int!, $query:String) {
+      products(first:$first, query:$query) {
+        edges {
+          node {
+            id
+            title
+            handle
+            descriptionHtml
+            featuredImage { url altText }
+            priceRange {
+              minVariantPrice { amount currencyCode }
+              maxVariantPrice { amount currencyCode }
+            }
+            variants(first: 20) {
+              edges {
+                node {
+                  id
+                  title
+                  sku
+                  availableForSale
+                  selectedOptions { name value }
+                  price { amount currencyCode }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const data = await callStorefront(GQL, { first, query: q });
+  const list = (data.products?.edges || []).map(e => e.node);
+  return list;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Healthcheck Storefront (verificación rápida)
+// ─────────────────────────────────────────────────────────────
+app.get('/health/shopify', async (_req, res) => {
+  try {
+    const data = await searchProductsForQuery('frankies labs', 3);
+    const titles = data.map(p => p.title);
+    res.json({ ok: true, titles });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err), details: err?.details || err?.missing || null });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// Endpoint público: listar productos (búsqueda básica)
+// Uso: /storefront/products?limit=6&q=serum
+// ─────────────────────────────────────────────────────────────
+app.get('/storefront/products', async (req, res) => {
+  try {
+    const first = Math.min(Math.max(parseInt(req.query.limit || '6', 10), 1), 20);
+    const qParam = (req.query.q || '').toString().trim();
+    const q = qParam || makeSearchQuery(qParam) || null;
+
+    const GQL = `
+      query Products($first:Int!, $query:String) {
+        products(first:$first, query:$query) {
+          edges {
+            node {
+              id
+              title
+              handle
+              descriptionHtml
+              featuredImage { url altText }
+              priceRange {
+                minVariantPrice { amount currencyCode }
+                maxVariantPrice { amount currencyCode }
+              }
+              tags
+              variants(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    sku
+                    availableForSale
+                    selectedOptions { name value }
+                    price { amount currencyCode }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const data = await callStorefront(GQL, { first, query: q });
+    const products = (data.products?.edges || []).map(e => {
+      const p = e.node;
+      return {
+        id: p.id,
+        title: p.title,
+        handle: p.handle,
+        descriptionHtml: p.descriptionHtml,
+        image: p.featuredImage,
+        priceRange: p.priceRange,
+        tags: p.tags || [],
+        variants: (p.variants?.edges || []).map(v => v.node)
+      };
+    });
+
+    res.json({ ok: true, count: products.length, products });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err), details: err?.details || null });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// Utilidades para prompts
 // ─────────────────────────────────────────────────────────────
 function buildSystemPrompt() {
   // Reemplaza TODAS las apariciones de los placeholders
@@ -85,17 +259,46 @@ app.post('/chat', async (req, res) => {
 
     const context = sanitizeContext(req.body?.context);
 
-    // Construimos prompt de sistema con reglas de alcance + handoff soporte
+    // 1) Busca productos relevantes del catálogo para este mensaje (máx 5)
+    let productContext = '';
+    try {
+      const prods = await searchProductsForQuery(userMsg, 5);
+      if (prods.length) {
+        const lines = prods.map((p, i) => {
+          const min = p.priceRange?.minVariantPrice;
+          const max = p.priceRange?.maxVariantPrice;
+          const price =
+            min && max
+              ? (min.amount === max.amount
+                  ? `${min.amount} ${min.currencyCode}`
+                  : `${min.amount}-${max.amount} ${min.currencyCode}`)
+              : 'N/D';
+        const url = `https://${SHOPIFY_SHOP_DOMAIN}/products/${p.handle}`;
+          // disponibilidad simple: si alguna variante está disponible
+          const available = (p.variants?.edges || []).some(v => v.node.availableForSale);
+          return `${i + 1}. ${p.title} — Precio: ${price} — Disponible: ${available ? 'Sí' : 'Consultar'} — URL: ${url}`;
+        });
+        productContext =
+          `CATÁLOGO RELEVANTE (máx 5):\n` +
+          lines.join('\n') +
+          `\nUsa solo esta información para responder sobre productos. Si algo no está aquí, responde que no puedes confirmarlo.`;
+      }
+    } catch (_) {
+      // Si falla la búsqueda, continuamos sin contexto de productos.
+    }
+
+    // 2) Construimos prompt de sistema con reglas de alcance + handoff soporte
     const systemPrompt = buildSystemPrompt();
 
-    // Mensajes para la API
+    // 3) Mensajes para la API (inyectamos el contexto de catálogo como system extra)
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...context, // historial o pasajes (si usas RAG en el Paso 2)
+      ...(productContext ? [{ role: 'system', content: productContext }] : []),
+      ...context, // historial o pasajes (si usas RAG en el futuro)
       { role: 'user', content: userMsg }
     ];
 
-    // Llamada a OpenAI
+    // 4) Llamada a OpenAI
     const oaRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
